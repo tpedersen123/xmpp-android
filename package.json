@@ -1,0 +1,17 @@
+{
+  "name": "xmpp-android",
+  "repository": {
+    "type" : "git",
+    "url" : "http://stash:7990/scm/ott/xmpp-android.git"
+  },
+  "version": "0.0.1",
+  "description": "XMPP module for Android",
+  "author": "Teletronics",
+  "nativePackage": true,
+  "keywords": [
+    "react-native",
+    "react",
+    "native",
+    "XMPP"
+  ]
+}
