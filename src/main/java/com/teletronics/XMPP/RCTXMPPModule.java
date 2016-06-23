@@ -8,7 +8,7 @@ import com.facebook.react.bridge.ReactMethod;
 
 public class RCTXMPPModule extends ReactContextBaseJavaModule {
 
-    private static final String TAG = "RCTXMPPModule";
+    private static final String TAG = "XMMPHandler";
 
     private final ReactApplicationContext _reactContext;
 
