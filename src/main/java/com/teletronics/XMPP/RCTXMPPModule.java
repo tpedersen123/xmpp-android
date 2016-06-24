@@ -11,7 +11,6 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.chat.Chat;
 import org.jivesoftware.smack.chat.ChatManager;
-import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.thoughtcrime.ssl.pinning.PinningTrustManager;
@@ -32,6 +31,8 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
 
     private final ReactApplicationContext _reactContext;
 
+    private XMPPTCPConnection connection;
+
     public RCTXMPPModule(ReactApplicationContext reactContext) {
         super(reactContext);
         _reactContext = reactContext;
@@ -43,7 +44,12 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void connect(String serverName, String host, int port, String userName, String password) {
+    public void connect(String serverName, String host, int port, String userName, String password, boolean testServerMode) {
+        Log.d(TAG, "Connect called");
+        Log.d(TAG, "-----------------------------------");
+        Log.d(TAG, "Got: " + serverName + "," + host + "," + port + "," + userName + "," + password + "," + testServerMode);
+        Log.d(TAG, "-----------------------------------");
+
         SSLContext sc = null;
         XMPPTCPConnectionConfiguration conf = null;
         try {
@@ -51,21 +57,28 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
             //MemorizingTrustManager mtm = new MemorizingTrustManager(getCurrentActivity());
 
             X509TrustManager pinning = new PinningTrustManager(SystemKeyStore.getInstance(getCurrentActivity()),
-                    new String[] {"f30012bbc18c231ac1a44b788e410ce754182513"}, 0);
+                    new String[]{"f30012bbc18c231ac1a44b788e410ce754182513"}, 0);
             MemorizingTrustManager mtm = new MemorizingTrustManager(getCurrentActivity(), pinning);
             sc.init(null, new X509TrustManager[]{mtm}, new java.security.SecureRandom());
             XMPPTCPConnectionConfiguration.Builder builder = XMPPTCPConnectionConfiguration.builder();
             builder.setServiceName(serverName);
-            if (host!= null) {
+            if (host != null) {
+                Log.d(TAG, "Setting host name " + host);
                 builder.setHost(serverName);
             }
-            builder.setPort(port);
+            if (port != 0) {
+                Log.d(TAG, "Setting port " + port);
+                builder.setPort(port);
+            }
             builder.setUsernameAndPassword(userName, password);
 
             builder.setSecurityMode(ConnectionConfiguration.SecurityMode.required);
             builder.setConnectTimeout(15000);
             builder.setDebuggerEnabled(true);
-            builder.setCustomSSLContext(sc);
+            if (testServerMode) {
+                Log.d(TAG, "Test server mode");
+                builder.setCustomSSLContext(sc);
+            }
             builder.setHostnameVerifier(mtm.wrapHostnameVerifier(new org.apache.http.conn.ssl.StrictHostnameVerifier()));
             conf = builder.build();
 
@@ -75,25 +88,25 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
             e.printStackTrace();
         }
 
-        XMPPTCPConnection connection = new XMPPTCPConnection(conf);
+        connection = new XMPPTCPConnection(conf);
 
+
+    }
+
+    @ReactMethod
+    public void sendMessage(String receiver, String message) {
         try {
             XMPPTCPConnection con2 = (XMPPTCPConnection) connection.connect();
             con2.login();
-            Chat chat = ChatManager.getInstanceFor(connection)
-                    .createChat(userName, new ChatMessageListener() {
-                        @Override
-                        public void processMessage(Chat chat, org.jivesoftware.smack.packet.Message message) {
-                            Log.d("TAG", "Got message: " + message.getBody());
-                        }
-                    });
-            chat.sendMessage("Howdy!");
+            Chat chat = ChatManager.getInstanceFor(connection).createChat(receiver);
+            chat.sendMessage(message);
         } catch (XMPPException e) {
+            Log.d(TAG, e.getMessage());
             e.printStackTrace();
         } catch (SmackException e) {
-            e.printStackTrace();
+            Log.d(TAG, e.getMessage());
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.d(TAG, e.getMessage());
         }
     }
 }
