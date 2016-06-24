@@ -14,6 +14,8 @@ import org.jivesoftware.smack.chat.ChatManager;
 import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
+import org.thoughtcrime.ssl.pinning.PinningTrustManager;
+import org.thoughtcrime.ssl.pinning.SystemKeyStore;
 
 import java.io.IOException;
 import java.security.KeyManagementException;
@@ -46,7 +48,11 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
         XMPPTCPConnectionConfiguration conf = null;
         try {
             sc = SSLContext.getInstance("TLS");
-            MemorizingTrustManager mtm = new MemorizingTrustManager(getCurrentActivity());
+            //MemorizingTrustManager mtm = new MemorizingTrustManager(getCurrentActivity());
+
+            X509TrustManager pinning = new PinningTrustManager(SystemKeyStore.getInstance(_reactContext),
+                    new String[] {"f30012bbc18c231ac1a44b788e410ce754182513"}, 0);
+            MemorizingTrustManager mtm = new MemorizingTrustManager(_reactContext, pinning);
             sc.init(null, new X509TrustManager[]{mtm}, new java.security.SecureRandom());
             conf = XMPPTCPConnectionConfiguration.builder()
                     .setServiceName(serverName).setHost(serverName).setPort(port).setUsernameAndPassword(userName, password)
