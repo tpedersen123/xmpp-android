@@ -52,7 +52,7 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
 
             X509TrustManager pinning = new PinningTrustManager(SystemKeyStore.getInstance(getCurrentActivity()),
                     new String[] {"f30012bbc18c231ac1a44b788e410ce754182513"}, 0);
-            MemorizingTrustManager mtm = new MemorizingTrustManager(_reactContext, pinning);
+            MemorizingTrustManager mtm = new MemorizingTrustManager(getCurrentActivity(), pinning);
             sc.init(null, new X509TrustManager[]{mtm}, new java.security.SecureRandom());
             XMPPTCPConnectionConfiguration.Builder builder = XMPPTCPConnectionConfiguration.builder();
             builder.setServiceName(serverName);
