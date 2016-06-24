@@ -27,7 +27,7 @@ import de.duenndns.ssl.MemorizingTrustManager;
 
 public class RCTXMPPModule extends ReactContextBaseJavaModule {
 
-    private static final String TAG = "XMMPHandler";
+    private static final String TAG = "XMPPHandler";
 
     private final ReactApplicationContext _reactContext;
 
