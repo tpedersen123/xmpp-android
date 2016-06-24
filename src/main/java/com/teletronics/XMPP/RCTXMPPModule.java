@@ -87,8 +87,18 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
         } catch (KeyManagementException e) {
             e.printStackTrace();
         }
-
         connection = new XMPPTCPConnection(conf);
+        try {
+            XMPPTCPConnection con2 = (XMPPTCPConnection) connection.connect();
+            con2.login();
+        } catch (XMPPException e) {
+            Log.d(TAG, e.getMessage());
+            e.printStackTrace();
+        } catch (SmackException e) {
+            Log.d(TAG, e.getMessage());
+        } catch (IOException e) {
+            Log.d(TAG, e.getMessage());
+        }
 
 
     }
@@ -96,16 +106,9 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void sendMessage(String receiver, String message) {
         try {
-            XMPPTCPConnection con2 = (XMPPTCPConnection) connection.connect();
-            con2.login();
             Chat chat = ChatManager.getInstanceFor(connection).createChat(receiver);
             chat.sendMessage(message);
-        } catch (XMPPException e) {
-            Log.d(TAG, e.getMessage());
-            e.printStackTrace();
         } catch (SmackException e) {
-            Log.d(TAG, e.getMessage());
-        } catch (IOException e) {
             Log.d(TAG, e.getMessage());
         }
     }
