@@ -41,7 +41,7 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void connect(String serverName, String userName, String password) {
+    public void connect(String serverName, int port, String userName, String password) {
         SSLContext sc = null;
         XMPPTCPConnectionConfiguration conf = null;
         try {
@@ -49,7 +49,7 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
             MemorizingTrustManager mtm = new MemorizingTrustManager(getCurrentActivity());
             sc.init(null, new X509TrustManager[]{mtm}, new java.security.SecureRandom());
             conf = XMPPTCPConnectionConfiguration.builder()
-                    .setServiceName(serverName).setUsernameAndPassword(userName, password)
+                    .setServiceName(serverName).setPort(port).setUsernameAndPassword(userName, password)
                     .setSecurityMode(ConnectionConfiguration.SecurityMode.required)
                     .setConnectTimeout(15000)
                     .setDebuggerEnabled(true)
