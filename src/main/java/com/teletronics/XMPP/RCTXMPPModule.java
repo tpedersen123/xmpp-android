@@ -43,7 +43,7 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void connect(String serverName, int port, String userName, String password) {
+    public void connect(String serverName, String host, int port, String userName, String password) {
         SSLContext sc = null;
         XMPPTCPConnectionConfiguration conf = null;
         try {
@@ -54,14 +54,21 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
                     new String[] {"f30012bbc18c231ac1a44b788e410ce754182513"}, 0);
             MemorizingTrustManager mtm = new MemorizingTrustManager(_reactContext, pinning);
             sc.init(null, new X509TrustManager[]{mtm}, new java.security.SecureRandom());
-            conf = XMPPTCPConnectionConfiguration.builder()
-                    .setServiceName(serverName).setHost(serverName).setPort(port).setUsernameAndPassword(userName, password)
-                    .setSecurityMode(ConnectionConfiguration.SecurityMode.required)
-                    .setConnectTimeout(15000)
-                    .setDebuggerEnabled(true)
-                    .setCustomSSLContext(sc)
-                    .setHostnameVerifier(mtm.wrapHostnameVerifier(new org.apache.http.conn.ssl.StrictHostnameVerifier()))
-                    .build();
+            XMPPTCPConnectionConfiguration.Builder builder = XMPPTCPConnectionConfiguration.builder();
+            builder.setServiceName(serverName);
+            if (host!= null) {
+                builder.setHost(serverName);
+            }
+            builder.setPort(port);
+            builder.setUsernameAndPassword(userName, password);
+
+            builder.setSecurityMode(ConnectionConfiguration.SecurityMode.required);
+            builder.setConnectTimeout(15000);
+            builder.setDebuggerEnabled(true);
+            builder.setCustomSSLContext(sc);
+            builder.setHostnameVerifier(mtm.wrapHostnameVerifier(new org.apache.http.conn.ssl.StrictHostnameVerifier());
+            conf = builder.build();
+            -)
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (KeyManagementException e) {
