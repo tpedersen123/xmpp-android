@@ -50,7 +50,7 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
             sc = SSLContext.getInstance("TLS");
             //MemorizingTrustManager mtm = new MemorizingTrustManager(getCurrentActivity());
 
-            X509TrustManager pinning = new PinningTrustManager(SystemKeyStore.getInstance(_reactContext),
+            X509TrustManager pinning = new PinningTrustManager(SystemKeyStore.getInstance(getCurrentActivity()),
                     new String[] {"f30012bbc18c231ac1a44b788e410ce754182513"}, 0);
             MemorizingTrustManager mtm = new MemorizingTrustManager(_reactContext, pinning);
             sc.init(null, new X509TrustManager[]{mtm}, new java.security.SecureRandom());
