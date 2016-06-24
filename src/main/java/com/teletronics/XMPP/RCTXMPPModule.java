@@ -66,9 +66,9 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
             builder.setConnectTimeout(15000);
             builder.setDebuggerEnabled(true);
             builder.setCustomSSLContext(sc);
-            builder.setHostnameVerifier(mtm.wrapHostnameVerifier(new org.apache.http.conn.ssl.StrictHostnameVerifier());
+            builder.setHostnameVerifier(mtm.wrapHostnameVerifier(new org.apache.http.conn.ssl.StrictHostnameVerifier()));
             conf = builder.build();
-            -)
+
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (KeyManagementException e) {
