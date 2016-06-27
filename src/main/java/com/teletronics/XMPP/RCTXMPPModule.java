@@ -1,17 +1,24 @@
 package com.teletronics.XMPP;
 
 import android.content.res.AssetManager;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.chat.Chat;
 import org.jivesoftware.smack.chat.ChatManager;
+import org.jivesoftware.smack.chat.ChatMessageListener;
+import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.thoughtcrime.ssl.pinning.PinningTrustManager;
@@ -141,10 +148,26 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void sendMessage(String receiver, String message) {
         try {
-            Chat chat = ChatManager.getInstanceFor(connection).createChat(receiver);
+            Chat chat = ChatManager.getInstanceFor(connection).createChat(receiver, new ChatMessageListener() {
+                        @Override
+                        public void processMessage(Chat chat, Message message) {
+                            Log.d("XMPPTEST", "Got message: " + message.getBody());
+                            WritableMap params = Arguments.createMap();
+                            params.putString("body", message.getBody());
+                            sendEvent(_reactContext, "XMPPMessage", params);
+                        }
+                    });
             chat.sendMessage(message);
         } catch (SmackException e) {
             Log.d(TAG, e.getMessage());
         }
+    }
+
+    private void sendEvent(ReactContext reactContext,
+                           String eventName,
+                           @Nullable WritableMap params) {
+        reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit(eventName, params);
     }
 }
