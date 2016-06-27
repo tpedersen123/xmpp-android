@@ -87,6 +87,7 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
             } catch (KeyStoreException e) {
                 e.printStackTrace();
             }
+
             sc.init(null, tmf.getTrustManagers(), new java.security.SecureRandom());
 
 
