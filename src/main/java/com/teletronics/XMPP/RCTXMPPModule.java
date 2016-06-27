@@ -17,6 +17,7 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.chat.Chat;
 import org.jivesoftware.smack.chat.ChatManager;
+import org.jivesoftware.smack.chat.ChatManagerListener;
 import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
@@ -45,6 +46,8 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
     private final ReactApplicationContext _reactContext;
 
     private XMPPTCPConnection connection;
+
+    ChatManager incomingChat;
 
     public RCTXMPPModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -142,21 +145,33 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
             Log.d(TAG, e.getMessage());
         }
 
+        incomingChat = ChatManager.getInstanceFor(connection);
+
+        incomingChat.addChatListener(new ChatManagerListener() {
+
+            @Override
+            public void chatCreated(Chat chat, boolean createdLocally) {
+                chat.addMessageListener(new ChatMessageListener() {
+                    @Override
+                    public void processMessage(Chat chat, Message message) {
+                        Log.d("XMPPTEST", "Got message: " + message.getBody());
+                        WritableMap params = Arguments.createMap();
+                        params.putString("thread", message.getThread());
+                        params.putString("subject", message.getSubject());
+                        params.putString("body", message.getBody());
+                        params.putString("from", message.getFrom());
+                        sendEvent(_reactContext, "XMPPMessage", params);
+                    }
+                });
+            }
+        });
 
     }
 
     @ReactMethod
     public void sendMessage(String receiver, String message) {
         try {
-            Chat chat = ChatManager.getInstanceFor(connection).createChat(receiver, new ChatMessageListener() {
-                        @Override
-                        public void processMessage(Chat chat, Message message) {
-                            Log.d("XMPPTEST", "Got message: " + message.getBody());
-                            WritableMap params = Arguments.createMap();
-                            params.putString("body", message.getBody());
-                            sendEvent(_reactContext, "XMPPMessage", params);
-                        }
-                    });
+            Chat chat = ChatManager.getInstanceFor(connection).createChat(receiver);
             chat.sendMessage(message);
         } catch (SmackException e) {
             Log.d(TAG, e.getMessage());
