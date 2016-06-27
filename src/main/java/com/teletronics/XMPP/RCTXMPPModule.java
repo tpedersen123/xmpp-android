@@ -22,8 +22,6 @@ import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
-import org.thoughtcrime.ssl.pinning.PinningTrustManager;
-import org.thoughtcrime.ssl.pinning.SystemKeyStore;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,9 +33,6 @@ import java.security.cert.CertificateException;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
-
-import de.duenndns.ssl.MemorizingTrustManager;
 
 public class RCTXMPPModule extends ReactContextBaseJavaModule {
 
@@ -67,8 +62,6 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
         Log.d(TAG, "-----------------------------------");
 
         SSLContext sc = null;
-        String pin = "6d77eb40a81dde12001dc32f9c946a3c73caec16";
-        String pins[] = {pin};
 
         XMPPTCPConnectionConfiguration conf = null;
         try {
@@ -94,14 +87,6 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
             } catch (KeyStoreException e) {
                 e.printStackTrace();
             }
-
-            //MemorizingTrustManager mtm = new MemorizingTrustManager(getCurrentActivity());
-            Log.d(TAG, "Using pin: " + pin);
-            X509TrustManager pinning = new PinningTrustManager(SystemKeyStore.getInstance(getCurrentActivity()),
-                    new String[]{pin}, 0);
-            MemorizingTrustManager mtm = new MemorizingTrustManager(getCurrentActivity(), pinning);
-
-            //sc.init(null, new X509TrustManager[]{mtm}, new java.security.SecureRandom());
             sc.init(null, tmf.getTrustManagers(), new java.security.SecureRandom());
 
 
