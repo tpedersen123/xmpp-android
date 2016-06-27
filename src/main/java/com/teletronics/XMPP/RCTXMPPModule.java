@@ -1,5 +1,6 @@
 package com.teletronics.XMPP;
 
+import android.content.res.AssetManager;
 import android.util.Log;
 
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -17,10 +18,15 @@ import org.thoughtcrime.ssl.pinning.PinningTrustManager;
 import org.thoughtcrime.ssl.pinning.SystemKeyStore;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
 import de.duenndns.ssl.MemorizingTrustManager;
@@ -51,15 +57,44 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
         Log.d(TAG, "-----------------------------------");
 
         SSLContext sc = null;
+        String pin = "6d77eb40a81dde12001dc32f9c946a3c73caec16";
+        String pins[] = {pin};
+
         XMPPTCPConnectionConfiguration conf = null;
         try {
-            sc = SSLContext.getInstance("TLS");
-            //MemorizingTrustManager mtm = new MemorizingTrustManager(getCurrentActivity());
 
+            KeyStore trustStore = null;
+            AssetManager assetManager = getCurrentActivity().getAssets();
+            try {
+                InputStream keyStoreInputStream = assetManager.open("yourapp.store");
+                trustStore = KeyStore.getInstance("BKS");
+                trustStore.load(keyStoreInputStream, "test123".toCharArray());
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (KeyStoreException e) {
+                e.printStackTrace();
+            } catch (CertificateException e) {
+                e.printStackTrace();
+            }
+
+            sc = SSLContext.getInstance("TLS");
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance("X509");
+            try {
+                tmf.init(trustStore);
+            } catch (KeyStoreException e) {
+                e.printStackTrace();
+            }
+
+            //MemorizingTrustManager mtm = new MemorizingTrustManager(getCurrentActivity());
+            Log.d(TAG, "Using pin: " + pin);
             X509TrustManager pinning = new PinningTrustManager(SystemKeyStore.getInstance(getCurrentActivity()),
-                    new String[]{"6D77EB40A81DDE12001DC32F9C946A3C73CAEC16"}, 0);
+                    new String[]{pin}, 0);
             MemorizingTrustManager mtm = new MemorizingTrustManager(getCurrentActivity(), pinning);
-            sc.init(null, new X509TrustManager[]{mtm}, new java.security.SecureRandom());
+
+            //sc.init(null, new X509TrustManager[]{mtm}, new java.security.SecureRandom());
+            sc.init(null, tmf.getTrustManagers(), new java.security.SecureRandom());
+
+
             XMPPTCPConnectionConfiguration.Builder builder = XMPPTCPConnectionConfiguration.builder();
             builder.setServiceName(serverName);
             if (host != null) {
@@ -79,7 +114,7 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
                 Log.d(TAG, "Test server mode");
                 builder.setCustomSSLContext(sc);
             }
-            builder.setHostnameVerifier(mtm.wrapHostnameVerifier(new org.apache.http.conn.ssl.StrictHostnameVerifier()));
+            //builder.setHostnameVerifier(mtm.wrapHostnameVerifier(new org.apache.http.conn.ssl.StrictHostnameVerifier()));
             conf = builder.build();
 
         } catch (NoSuchAlgorithmException e) {
