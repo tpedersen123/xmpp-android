@@ -157,7 +157,7 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void sendMessage(String receiver, String message, String thread) {
+    public void sendThreadMessage(String receiver, String message, String thread) {
         try {
             Chat chat = ChatManager.getInstanceFor(connection).createChat(receiver, thread, chatListener);
             chat.sendMessage(message);
