@@ -30,6 +30,8 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
@@ -44,6 +46,8 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
 
     ChatManager incomingChat;
     ChatMessageListener chatListener;
+
+    Map<String, Chat> threads = new HashMap<String,Chat>();
 
     public RCTXMPPModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -159,7 +163,11 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void sendThreadMessage(String receiver, String message, String thread) {
         try {
-            Chat chat = ChatManager.getInstanceFor(connection).createChat(receiver, thread, chatListener);
+            Chat chat = threads.get(thread);;
+            if (chat == null) {
+                chat = ChatManager.getInstanceFor(connection).createChat(receiver, thread, chatListener);
+                threads.put(thread, chat);
+            }
             chat.sendMessage(message);
         } catch (SmackException e) {
             Log.d(TAG, e.getMessage());
