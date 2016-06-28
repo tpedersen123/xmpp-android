@@ -43,6 +43,7 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
     private XMPPTCPConnection connection;
 
     ChatManager incomingChat;
+    ChatMessageListener chatListener;
 
     public RCTXMPPModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -133,25 +134,36 @@ public class RCTXMPPModule extends ReactContextBaseJavaModule {
 
         incomingChat = ChatManager.getInstanceFor(connection);
 
-        incomingChat.addChatListener(new ChatManagerListener() {
+        chatListener = new ChatMessageListener() {
+            @Override
+            public void processMessage(Chat chat, Message message) {
+                Log.d("XMPPTEST", "Got message: " + message.getBody());
+                WritableMap params = Arguments.createMap();
+                params.putString("thread", message.getThread());
+                params.putString("subject", message.getSubject());
+                params.putString("body", message.getBody());
+                params.putString("from", message.getFrom());
+                sendEvent(_reactContext, "XMPPMessage", params);
+            }
+        };
 
+        incomingChat.addChatListener(new ChatManagerListener() {
             @Override
             public void chatCreated(Chat chat, boolean createdLocally) {
-                chat.addMessageListener(new ChatMessageListener() {
-                    @Override
-                    public void processMessage(Chat chat, Message message) {
-                        Log.d("XMPPTEST", "Got message: " + message.getBody());
-                        WritableMap params = Arguments.createMap();
-                        params.putString("thread", message.getThread());
-                        params.putString("subject", message.getSubject());
-                        params.putString("body", message.getBody());
-                        params.putString("from", message.getFrom());
-                        sendEvent(_reactContext, "XMPPMessage", params);
-                    }
-                });
+                chat.addMessageListener(chatListener);
             }
         });
 
+    }
+
+    @ReactMethod
+    public void sendMessage(String receiver, String message, String thread) {
+        try {
+            Chat chat = ChatManager.getInstanceFor(connection).createChat(receiver, thread, chatListener);
+            chat.sendMessage(message);
+        } catch (SmackException e) {
+            Log.d(TAG, e.getMessage());
+        }
     }
 
     @ReactMethod
